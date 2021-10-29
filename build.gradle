@@ -1,0 +1,133 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+    }
+}
+plugins {
+    id 'eclipse'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradleutils' version '1.+'
+}
+apply plugin: 'net.minecraftforge.gradle'
+
+version = '1.16.5-' + gradleutils.getTagOffsetVersion()
+group = 'net.minecraftforge.lex'
+//archivesBaseName = 'StorageDrawersCraftingRecipe'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+println('Version: ' + version + ' Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
+minecraft {
+    mappings channel: 'official', version: '1.16.5'
+    runs {
+        client {
+            workingDirectory project.file('run')
+            //property 'forge.logging.markers', 'REGISTRIES'
+            //property 'forge.logging.console.level', 'debug'
+            mods {
+                sdcr {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            mods {
+                sdcr {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+            mods {
+                sdcr {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+repositories {
+    maven {
+        url 'https://cursemaven.com/'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.16.5-36.2.8'
+    implementation fg.deobf('curse.maven:storage-drawers-223852:3402515')
+}
+ext {
+    changelog = rootProject.file('build/changelog.txt')
+    MANIFEST = manifest{
+        attributes([
+            'Specification-Title':      project.name,
+            'Specification-Vendor':     'Forge Development LLC',
+            'Specification-Version':    project.version.split('-')[1],
+            'Implementation-Title':     project.name,
+            'Implementation-Version':   project.version.split('-')[1],
+            'Implementation-Vendor':    'Forge Development LLC'
+        ] as LinkedHashMap)
+    }
+}
+
+task extractRange(type: net.minecraftforge.gradle.common.tasks.ExtractRangeMap, dependsOn: classes) {
+    sources.from sourceSets.main.java.srcDirs
+    dependencies.from compileJava.classpath
+}
+
+task applyRange(type: net.minecraftforge.gradle.common.tasks.ApplyRangeMap, dependsOn: [extractRange, createMcpToSrg]) {
+    rangeMap.set extractRange.output
+    srgFiles.from createMcpToSrg.output
+    sources.from sourceSets.main.java.srcDirs
+}
+
+task sourcesJar(type: Jar, dependsOn: applyRange) {
+    classifier = 'sources'
+    from zipTree(applyRange.output)
+    manifest.from(MANIFEST)
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+    if (changelog.exists())
+        archives changelog
+}
+
+jar {
+    manifest.from(MANIFEST)
+}
+jar.finalizedBy('reobfJar') 
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+            artifact sourcesJar
+            if (changelog.exists()) {
+                artifact(changelog){
+                    classifier 'changelog'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "file:///${project.projectDir}/repo"
+        }
+    }
+}

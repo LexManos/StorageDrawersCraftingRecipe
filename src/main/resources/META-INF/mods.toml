@@ -1,0 +1,38 @@
+modLoader="javafml"
+loaderVersion="[36,)"
+license="LGPL 2.1"
+issueTrackerURL="https://github.com/LexManos/StorageDrawersCraftingRecipe/"
+[[mods]]
+modId="sdcr"
+version="${file.jarVersion}"
+displayName="Storage Drawers Crafting Recipe"
+#updateJSONURL="https://change.me.example.invalid/updates.json"
+displayURL="https://github.com/LexManos/StorageDrawersCraftingRecipe/"
+#logoFile="examplemod.png"
+#credits=""
+authors="LexManos"
+description='''
+Allows crafting storage drawers with upgrades. So you can automate them.
+'''
+
+
+[[dependencies.sdcr]]
+    modId="forge"
+    mandatory=true
+    versionRange="[36,)" #mandatory
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.sdcr]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.16.5,1.17)"
+    ordering="NONE"
+    side="BOTH"
+    
+[[dependencies.sdcr]]
+    modId="storagedrawers"
+    mandatory=true
+    versionRange="[8.3,)"
+    ordering="NONE"
+    side="BOTH"
